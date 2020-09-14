@@ -16,36 +16,48 @@ List* list_init()
   return list;
 }
 
-/** Inserta un nuevo elemento al final de la lista */
-// void list_append(List* list, Args* args, int pid)
-// {
-  // Process* process = malloc(sizeof(Process));
-//   process -> pid = pid;
-//   memcpy (process->command, args->argv[0], sizeof(args->command)); 
-//   process -> start_time = time(NULL);
-//   process -> next = NULL;
+/** Inserta un nuevo elemento segun su start time */
+void list_start_time_append(List* list, Process* process)
+{
 
-//   // Si la lista está vacía entonces queda como el primer elemento
-//   if(list -> head == NULL)
-//   {
-//     list -> head = process;
-//   }
-//   // Sino, se pone como el siguiente del ultimo
-//   else
-//   {
-//     list -> tail -> next = process;
-//   }
-//   // Luego se deja a este nodo como el último
-//   list -> tail = process;
-// }
+  // Si la lista está vacía entonces queda como el primer elemento
+  if(list -> head == NULL)
+  {
+    list -> head = process;
+  }
+  // Caso en que es mas prioritario que el head actual
+  else if (list -> head -> start_time > process -> start_time) 
+  {
+    process -> next = list -> head;
+    list -> head = process;
+  }
+  // Sino, se pone antes del que tenga un start time mayor
+  else
+  {
+    Process* curr = list -> head -> next;
+    Process* prev = list -> head;
+
+    while(curr)
+    {
+      if (curr -> start_time > process -> start_time)
+      {
+        prev -> next = process;
+        process -> next = curr;
+        break;
+      }
+
+      prev = curr;
+      curr = curr -> next;
+    }
+  }
+}
 
 /** Imprime todos los elementos de la lista */
 void list_print(List* list)
 {
   for(Process* current = list -> head; current; current = current -> next)
   {
-    time_t current_time = time(NULL);
-    printf("PID: %i      Tiempo: %li\n", current->pid, current_time - current->start_time);
+    printf("PID: %i      Start time: %i   Deadline: %i\n", current->pid, current->start_time, current->deadline);
   }
 }
 
