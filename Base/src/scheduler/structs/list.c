@@ -12,6 +12,7 @@ List* list_init()
   List* list = malloc(sizeof(List));
   list -> head = NULL;
   list -> tail = NULL;
+  list->len = 0;
 
   return list;
 }
@@ -19,6 +20,7 @@ List* list_init()
 /** Inserta un nuevo elemento segun su start time */
 void list_start_time_append(List* list, Process* process)
 {
+  list->len++;
 
   // Si la lista está vacía entonces queda como el primer elemento
   if(list -> head == NULL)
