@@ -1,4 +1,4 @@
-#include "./list/list.h"
+#include "./structs/queue.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
