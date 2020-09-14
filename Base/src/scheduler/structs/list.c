@@ -21,6 +21,7 @@ List* list_init()
 void list_start_time_append(List* list, Process* process)
 {
   list->len++;
+    process -> next = NULL;
 
   // Si la lista está vacía entonces queda como el primer elemento
   if(list -> head == NULL)
@@ -60,6 +61,7 @@ void list_start_time_append(List* list, Process* process)
 /** Inserta un nuevo elemento segun su start time */
 void list_deadline_append(List* list, Process* process)
 {
+  process -> next = NULL;
   list->len++;
 
   // Si la lista está vacía entonces queda como el primer elemento
@@ -91,9 +93,9 @@ void list_deadline_append(List* list, Process* process)
       prev = curr;
       curr = curr -> next;
     }
-      prev -> next = process;
-      list -> tail = process;
-      return;
+    prev -> next = process;
+    list -> tail = process;
+    return;
   }
 }
 
@@ -103,11 +105,6 @@ Process* list_pop_head(List* list)
   Process* head = list->head;
   list -> head = list->head->next;
   list->len--;
-
-  if(list->head->next == NULL)
-  {
-    list->tail = list->head;
-  }
   return head;
 }
 

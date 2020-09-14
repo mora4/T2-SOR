@@ -91,29 +91,39 @@ Queue* read_input(char* filename)
   return queue;
 }
 
-void Simulation(Queue* queue){
-  int t = 0;
-  while (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
-  || queue->running_processes->len>0)
+void new_processes(Queue* queue, int cpus, int t) 
+{
+  while (queue->not_started_processes->head && queue->not_started_processes->head->start_time == t)
+    //Proceso entra a la simulación
+    {
+      Process* ready_process = list_pop_head(queue->not_started_processes);
+      //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
+      if(queue->running_processes->len == cpus && (
+        (ready_process->deadline<queue->running_processes->tail->deadline) ||
+        ((ready_process->deadline==queue->running_processes->tail->deadline) 
+        && (ready_process->pid<queue->running_processes->tail->pid))))
+      {
+        Process* interrupted_process = list_pop_tail(queue->running_processes);
+        list_deadline_append(queue->running_processes, ready_process);
+        list_deadline_append(queue->ready_processes, interrupted_process);    
+      }
+      list_deadline_append(queue->ready_processes, ready_process);
+    }
+}
+
+void simulation(Queue* queue, int cpus)
+{
+  int t = -1;
+  while ((t<5) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  || queue->running_processes->len>0))
   {
     t+=1;
-    if (queue->not_started_processes->len>0){
-      while (queue->not_started_processes->head->start_time == t)
-      //Proceso entra a la simulación
-      {
-        Process* ready_process = list_pop_head(queue->not_started_processes);
-        //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
-        if(ready_process->deadline<queue->running_processes->tail->deadline||
-        ready_process->deadline==queue->running_processes->tail->deadline&& ready_process->pid<queue->running_processes->tail->pid){
-          Process* interrupted_process = list_pop_tail(queue->running_processes);
-          list_deadline_append(queue->running_processes, ready_process);
-          list_deadline_append(queue->ready_processes, interrupted_process);    
-
-        }
-        list_deadline_append(queue->ready_processes, ready_process);
-      }  
-    }
-
+    new_processes(queue, cpus, t);
+    printf("Time: %i\n", t);
+    printf("Ready:\n");
+    list_print(queue->ready_processes);
+    printf("Not started:\n");
+    list_print(queue->not_started_processes);
   }
   
 }
@@ -127,13 +137,14 @@ int main(int argc, char *argv[])
   {
     int cpus = 1;
     Queue* queue =read_input(argv[1]);
+    simulation(queue, cpus);
     queue_destroy(queue);
   }
   else if (argc == 4)
   {
     int cpus = atoi(argv[3]);
     Queue* queue = read_input(argv[1]);
-    list_print(queue->not_started_processes);
+    simulation(queue, cpus);
     queue_destroy(queue);
   }
   else
