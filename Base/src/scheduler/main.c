@@ -91,6 +91,33 @@ Queue* read_input(char* filename)
   return queue;
 }
 
+void Simulation(Queue* queue){
+  int t = 0;
+  while (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  || queue->running_processes->len>0)
+  {
+    t+=1;
+    if (queue->not_started_processes->len>0){
+      while (queue->not_started_processes->head->start_time == t)
+      //Proceso entra a la simulación
+      {
+        Process* ready_process = list_pop_head(queue->not_started_processes);
+        //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
+        if(ready_process->deadline<queue->running_processes->tail->deadline||
+        ready_process->deadline==queue->running_processes->tail->deadline&& ready_process->pid<queue->running_processes->tail->pid){
+          Process* interrupted_process = list_pop_tail(queue->running_processes);
+          list_deadline_append(queue->running_processes, ready_process);
+          list_deadline_append(queue->ready_processes, interrupted_process);    
+
+        }
+        list_deadline_append(queue->ready_processes, ready_process);
+      }  
+    }
+
+  }
+  
+}
+
 int main(int argc, char *argv[])
 {
   // Este programa recibe dos parámetros:
@@ -115,6 +142,7 @@ int main(int argc, char *argv[])
     printf("Uso correcto: %s PATH_TO_INPUT\n", argv[0]);
     return 1;
   }
+  
 
   return 0;
 }
