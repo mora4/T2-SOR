@@ -1,0 +1,10 @@
+crexec ./helloworld
+crlist
+crkill 2 11317
+
+Subir tarea:
+1) copiar carpeta al servidor: scp -r subir_T1 amora2@iic2333.ing.puc.cl:T1
+2) Entrar al servidor: ssh amora2@iic2333.ing.puc.cl
+3) Compilar: make
+4) probar tarea en el servidor: ./crsh
+5) Borrar binarios y dejar solo codigo base: make clean
