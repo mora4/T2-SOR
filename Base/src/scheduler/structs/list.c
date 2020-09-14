@@ -36,19 +36,21 @@ void list_start_time_append(List* list, Process* process)
   {
     Process* curr = list -> head -> next;
     Process* prev = list -> head;
-
     while(curr)
     {
       if (curr -> start_time > process -> start_time)
       {
         prev -> next = process;
         process -> next = curr;
-        break;
+        return;
       }
 
       prev = curr;
       curr = curr -> next;
     }
+      prev -> next = process;
+      list -> tail = process;
+      return;
   }
 }
 

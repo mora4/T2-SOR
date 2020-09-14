@@ -60,6 +60,7 @@ Queue* read_input(char* filename)
     char deadline_str[255];
     strcpy(deadline_str, token);
     int deadline = atoi(deadline_str);
+    deadline = deadline + process->start_time;
     process->deadline= deadline;
 
     /* get the bursts */
@@ -75,7 +76,6 @@ Queue* read_input(char* filename)
       char burst_str[255];
       strcpy(burst_str, token);
       int burst = atoi(burst_str);
-      printf("b: %i, burst: %i\n", b, burst);
 
       if(b % 2 == 0) {
         process->cpu_bursts[b/2] = burst;
@@ -99,15 +99,15 @@ int main(int argc, char *argv[])
   if (argc == 3)
   {
     int cpus = 1;
-    printf("CPUs: %i", cpus);
     Queue* queue =read_input(argv[1]);
+    queue_destroy(queue);
   }
   else if (argc == 4)
   {
     int cpus = atoi(argv[3]);
-    printf("CPUs: %i", cpus);
-    Queue* queue = read_input(argv[1]); 
-    
+    Queue* queue = read_input(argv[1]);
+    list_print(queue->not_started_processes);
+    queue_destroy(queue);
   }
   else
   {
