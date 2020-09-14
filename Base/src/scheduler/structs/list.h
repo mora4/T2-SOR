@@ -33,6 +33,7 @@ struct linked_list
   Process* head;
   /** El último nodo de la lista */
   Process* tail;
+  int len;
 };
 
 // Declaramos las funciones asociadas
