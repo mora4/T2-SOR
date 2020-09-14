@@ -26,6 +26,7 @@ void list_start_time_append(List* list, Process* process)
   if(list -> head == NULL)
   {
     list -> head = process;
+    list ->tail = process;
   }
   // Caso en que es mas prioritario que el head actual
   else if (list -> head -> start_time > process -> start_time) 
@@ -53,6 +54,85 @@ void list_start_time_append(List* list, Process* process)
       prev -> next = process;
       list -> tail = process;
       return;
+  }
+}
+
+/** Inserta un nuevo elemento segun su start time */
+void list_deadline_append(List* list, Process* process)
+{
+  list->len++;
+
+  // Si la lista está vacía entonces queda como el primer elemento
+  if(list -> head == NULL)
+  {
+    list -> head = process;
+    list ->tail = process;
+  }
+  // Caso en que es mas prioritario que el head actual
+  else if (list -> head -> deadline > process -> deadline) 
+  {
+    process -> next = list -> head;
+    list -> head = process;
+  }
+  // Sino, se pone antes del que tenga un start time mayor
+  else
+  {
+    Process* curr = list -> head -> next;
+    Process* prev = list -> head;
+    while(curr)
+    {
+      if (curr -> deadline > process -> deadline)
+      {
+        prev -> next = process;
+        process -> next = curr;
+        return;
+      }
+
+      prev = curr;
+      curr = curr -> next;
+    }
+      prev -> next = process;
+      list -> tail = process;
+      return;
+  }
+}
+
+/** Saca al primer elemento de la lista */
+Process* list_pop_head(List* list)
+{
+  Process* head = list->head;
+  list -> head = list->head->next;
+  list->len--;
+
+  if(list->head->next == NULL)
+  {
+    list->tail = list->head;
+  }
+  return head;
+}
+
+/** Saca al ultimo elemento de la lista */
+Process* list_pop_tail(List* list)
+{
+  Process* curr = list -> head -> next;
+  Process* prev = list -> head;
+
+  if (curr == NULL)
+  {
+    list->head = NULL;
+    list->tail = NULL;
+    return prev;
+  }
+  else
+  {
+    while(curr->next)
+    {
+      prev = curr;
+      curr = curr -> next;
+    }
+    list->tail = prev;
+    list ->tail->next = NULL;
+    return curr;
   }
 }
 
