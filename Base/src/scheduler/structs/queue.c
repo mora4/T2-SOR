@@ -10,7 +10,7 @@ Queue* queue_init(){
     queue ->ready_processes = list_init();
     queue ->running_processes = list_init();
     queue -> finished_processes = list_init();
-
+    return queue;
 }
 
 void queue_destroy(Queue* queue){
