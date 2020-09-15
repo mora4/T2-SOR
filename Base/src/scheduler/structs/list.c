@@ -138,7 +138,7 @@ void list_print(List* list)
 {
   for(Process* current = list -> head; current; current = current -> next)
   {
-    printf("PID: %i      Start time: %i   Deadline: %i\n", current->pid, current->start_time, current->deadline);
+    printf("PID: %i      Start time: %i   Deadline: %i    Burst time left: %i\n", current->pid, current->start_time, current->deadline, current->burst_time_left);
   }
 }
 
@@ -164,21 +164,28 @@ void list_destroy(List* list)
 }
 
 /** Remueve al proceso con pid pid */
-void list_remove(List* list, int pid)
+Process* list_remove(List* list, int pid)
 {
+    list->len--;
     Process* curr = list -> head -> next;
     Process* prev = list -> head;
 
+    // Si es el head
     if(prev->pid == pid)
     {
-        if(list->tail->pid == pid)
-        {
-            list->tail = NULL;
-        }
-        list->head = list->head->next;
-        // printf("Voy a destruir al nodo HEAD con pid: %i = %i", prev->pid, pid);
-        free(prev);
+      // Si ademas es el tail
+      if(list->tail->pid == pid)
+      {
+          list->tail = NULL;
+          list->head = NULL;
+      }
+      else 
+      {
+        list->head = list ->head ->next;
+      }
+      return prev;
     }
+    // Si no es el head
     else
     {
         while((curr->pid != pid) && curr)
@@ -186,10 +193,12 @@ void list_remove(List* list, int pid)
             prev = curr;
             curr = curr -> next;
         }
-        // printf("Voy a destruir al nodo con pid: %i = %i", curr->pid, pid);
         prev ->next = curr->next;
-
-        free(curr);    
+        if (prev->next == NULL)
+        {
+          list->tail = prev;
+        }
+        return curr;
     }
 }
 

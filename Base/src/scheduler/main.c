@@ -29,6 +29,9 @@ Queue* read_input(char* filename)
   for (int p = 0; p < total_processes; p++)
   {
     Process* process = malloc(sizeof(Process));
+    process->current_cpu_burst = 0;
+    process->current_io_burst = 0;
+    process->burst_time_left = -1;
     process -> next = NULL;
     fgets(line, sizeof(line), file);
 
@@ -97,6 +100,7 @@ void new_processes(Queue* queue, int cpus, int t)
     //Proceso entra a la simulación
     {
       Process* ready_process = list_pop_head(queue->not_started_processes);
+      ready_process ->burst_time_left = ready_process->cpu_bursts[ready_process->current_cpu_burst];
       //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
       if(queue->running_processes->len == cpus && (
         (ready_process->deadline<queue->running_processes->tail->deadline) ||
@@ -111,19 +115,116 @@ void new_processes(Queue* queue, int cpus, int t)
     }
 }
 
+void running_processes(Queue* queue, int cpus) 
+{
+  int finished_list[255];
+  int finished = 0;
+  int waiting_list[255];
+  int waiting = 0;
+  for(Process* current = queue->running_processes -> head; current; current = current -> next)
+  {
+    if (current->burst_time_left == 0)
+    {
+      current -> current_cpu_burst += 1;
+      if (current -> current_cpu_burst == current -> total_bursts)
+      {
+        finished_list[finished] = current ->pid;
+        finished++;
+      }
+      else 
+      {
+        waiting_list[waiting] = current ->pid;
+        waiting++;
+        current->burst_time_left = current->io_bursts[current->current_io_burst];
+      }
+    }
+    else
+    {
+      current->burst_time_left -= 1; 
+    }
+  }
+
+  for (int i = 0; i < finished; i++)
+  {
+    Process* finished_process = list_remove(queue ->running_processes, finished_list[i]);
+    list_deadline_append(queue->finished_processes, finished_process);
+  }
+
+  for (int i = 0; i < waiting; i++)
+  {
+    Process* waiting_process = list_remove(queue ->running_processes, waiting_list[i]);
+    list_deadline_append(queue->waiting_processes, waiting_process);
+  }
+}
+
+void ready_processes(Queue* queue, int cpus) 
+{
+  int ready = cpus - queue->running_processes->len; 
+
+  for (int i = 0; i < ready; i++)
+  {
+    if (queue ->ready_processes->head)
+    {
+      Process* ready_process = list_pop_head(queue ->ready_processes);
+      list_deadline_append(queue->running_processes, ready_process);
+    }
+    else 
+    {
+      break;
+    }
+  }
+}
+
+void waiting_processes(Queue* queue) 
+{
+  int ready_list[255];
+  int ready = 0;
+
+  for(Process* current = queue->waiting_processes -> head; current; current = current -> next)
+  {
+    if (current->burst_time_left == 0)
+    {
+      current -> current_io_burst += 1;
+      ready_list[ready] = current ->pid;
+      ready++;
+      current->burst_time_left = current->cpu_bursts[current->current_cpu_burst];
+    }
+    else
+    {
+      current->burst_time_left -= 1;
+    }
+  }
+
+  for (int i = 0; i < ready; i++)
+  {
+    Process* ready_process = list_remove(queue ->waiting_processes, ready_list[i]);
+    list_deadline_append(queue->ready_processes, ready_process);
+  }
+}
+
 void simulation(Queue* queue, int cpus)
 {
   int t = -1;
-  while ((t<5) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  while ((t<200) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
   || queue->running_processes->len>0))
   {
     t+=1;
+    running_processes(queue, cpus);
     new_processes(queue, cpus, t);
+    ready_processes(queue, cpus);
+    waiting_processes(queue);
+    printf("---------------------------------\n");
     printf("Time: %i\n", t);
-    printf("Ready:\n");
-    list_print(queue->ready_processes);
     printf("Not started:\n");
     list_print(queue->not_started_processes);
+    printf("Waiting:\n");
+    list_print(queue->waiting_processes);
+    printf("Ready:\n");
+    list_print(queue->ready_processes);
+    printf("Running:\n");
+    list_print(queue->running_processes);
+    printf("Finished:\n");
+    list_print(queue->finished_processes);
   }
   
 }

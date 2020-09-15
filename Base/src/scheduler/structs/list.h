@@ -49,7 +49,7 @@ List* list_init();
 void list_print(List* list);
 /** Libera todos los recursos asociados a esta lista */
 void list_destroy(List* list);
-void list_remove(List* list, int pid);
+Process* list_remove(List* list, int pid);
 void list_start_time_append(List* list, Process* process);
 void list_deadline_append(List* list, Process* process);
 Process* list_pop_head(List* list);
