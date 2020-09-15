@@ -63,7 +63,6 @@ Queue* read_input(char* filename)
     char deadline_str[255];
     strcpy(deadline_str, token);
     int deadline = atoi(deadline_str);
-    deadline = deadline + process->start_time;
     process->deadline= deadline;
 
     /* get the bursts */
@@ -159,10 +158,14 @@ void running_processes(Queue* queue, int cpus)
 
 void ready_processes(Queue* queue, int cpus) 
 {
-  int ready = cpus - queue->running_processes->len; 
+  // Si no hay ready processes no hacemos nada
+  if (queue->ready_processes->head == NULL) return;
 
+  // Cantidad de procesos que podemos pasar a running
+  int ready = cpus - queue->running_processes->len;
   for (int i = 0; i < ready; i++)
   {
+    // Pasamos a todos los que caben en running
     if (queue ->ready_processes->head)
     {
       Process* ready_process = list_pop_head(queue ->ready_processes);
@@ -170,8 +173,29 @@ void ready_processes(Queue* queue, int cpus)
     }
     else 
     {
+      // Ya no quedan procesos en la cola ready
       break;
     }
+  }
+
+  // Si no quedan ready processes no hay nada que interrumpir
+  if (queue->ready_processes->head == NULL) return;
+
+  // Vemos si hay que interrumpir un proceso
+  int check_for_interrupt = 1;
+  while(check_for_interrupt)
+  {
+    if ((queue->ready_processes->head) && (queue->ready_processes->head->deadline < queue->running_processes->tail->deadline))
+    {
+      Process* ready_process = list_pop_head(queue ->ready_processes);
+      Process* interrupted_process = list_pop_tail(queue ->running_processes);
+      list_deadline_append(queue->running_processes, ready_process);
+      list_deadline_append(queue->ready_processes, interrupted_process);
+    }
+    else
+    {
+      check_for_interrupt = 0;
+    } 
   }
 }
 
@@ -205,7 +229,7 @@ void waiting_processes(Queue* queue)
 void simulation(Queue* queue, int cpus)
 {
   int t = -1;
-  while ((t<200) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  while ((t<70) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
   || queue->running_processes->len>0))
   {
     t+=1;
