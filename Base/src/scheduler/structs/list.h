@@ -20,6 +20,12 @@ struct process
   int current_cpu_burst;
   int current_io_burst;
   int new_waiting;
+  int running_times;
+  int interrupted_times;
+  int turnaround_time;
+  int response_time;
+  int waiting_time;
+  int in_time;
 
   /** Un puntero al siguiente nodo de la lista */
   Process* next;
