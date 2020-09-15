@@ -32,6 +32,7 @@ Queue* read_input(char* filename)
     process->current_cpu_burst = 0;
     process->current_io_burst = 0;
     process->burst_time_left = -1;
+    process -> new_waiting = 0;
     process -> next = NULL;
     fgets(line, sizeof(line), file);
 
@@ -99,10 +100,12 @@ void new_processes(Queue* queue, int cpus, int t)
     //Proceso entra a la simulación
     {
       Process* ready_process = list_pop_head(queue->not_started_processes);
+      // Le asignamos el cpu burst que le toca
       ready_process ->burst_time_left = ready_process->cpu_bursts[ready_process->current_cpu_burst];
+
       //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
-      if(queue->running_processes->len == cpus && (
-        (ready_process->deadline<queue->running_processes->tail->deadline) ||
+      if(queue->running_processes->len == cpus && 
+        ((ready_process->deadline<queue->running_processes->tail->deadline) ||
         ((ready_process->deadline==queue->running_processes->tail->deadline) 
         && (ready_process->pid<queue->running_processes->tail->pid))))
       {
@@ -110,7 +113,10 @@ void new_processes(Queue* queue, int cpus, int t)
         list_deadline_append(queue->running_processes, ready_process);
         list_deadline_append(queue->ready_processes, interrupted_process);    
       }
-      list_deadline_append(queue->ready_processes, ready_process);
+      else 
+      {
+        list_deadline_append(queue->ready_processes, ready_process);
+      }
     }
 }
 
@@ -152,6 +158,7 @@ void running_processes(Queue* queue, int cpus)
   for (int i = 0; i < waiting; i++)
   {
     Process* waiting_process = list_remove(queue ->running_processes, waiting_list[i]);
+    waiting_process -> new_waiting = 1;
     list_deadline_append(queue->waiting_processes, waiting_process);
   }
 }
@@ -185,7 +192,11 @@ void ready_processes(Queue* queue, int cpus)
   int check_for_interrupt = 1;
   while(check_for_interrupt)
   {
-    if ((queue->ready_processes->head) && (queue->ready_processes->head->deadline < queue->running_processes->tail->deadline))
+    //Si el proceso tiene menor deadline que el último de la cola running o es igual y tiene menor ID
+    if ((queue->ready_processes->head) && 
+       ((queue->ready_processes->head->deadline < queue->running_processes->tail->deadline) || 
+       ((queue->ready_processes->head->deadline == queue->running_processes->tail->deadline) &&
+       (queue->ready_processes->head->pid < queue->running_processes->tail->pid))))
     {
       Process* ready_process = list_pop_head(queue ->ready_processes);
       Process* interrupted_process = list_pop_tail(queue ->running_processes);
@@ -206,7 +217,11 @@ void waiting_processes(Queue* queue)
 
   for(Process* current = queue->waiting_processes -> head; current; current = current -> next)
   {
-    if (current->burst_time_left == 0)
+    if (current->new_waiting)
+    {
+      current->new_waiting = 0;
+    }
+    else if (current->burst_time_left == 0)
     {
       current -> current_io_burst += 1;
       ready_list[ready] = current ->pid;

@@ -102,7 +102,7 @@ void list_deadline_append(List* list, Process* process)
 /** Saca al primer elemento de la lista */
 Process* list_pop_head(List* list)
 {
-  list->len++;
+  list->len--;
   Process* head = list->head;
   list -> head = list->head->next;
   return head;

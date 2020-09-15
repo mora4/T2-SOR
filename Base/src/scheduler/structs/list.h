@@ -19,6 +19,7 @@ struct process
   int burst_time_left;
   int current_cpu_burst;
   int current_io_burst;
+  int new_waiting;
 
   /** Un puntero al siguiente nodo de la lista */
   Process* next;
