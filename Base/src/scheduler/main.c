@@ -123,6 +123,9 @@ void running_processes(Queue* queue, int cpus, int t)
     {
       current->response_time = t - current->start_time;
     }
+
+    current->burst_time_left -= 1;
+    
     if (current->burst_time_left == 0)
     {
       current -> current_cpu_burst += 1;
@@ -138,17 +141,13 @@ void running_processes(Queue* queue, int cpus, int t)
         current->burst_time_left = current->io_bursts[current->current_io_burst];
       }
     }
-    else
-    {
-      current->burst_time_left -= 1; 
-    }
   }
 
   for (int i = 0; i < finished; i++)
   {
     Process* finished_process = list_remove(queue ->running_processes, finished_list[i]);
     list_deadline_append(queue->finished_processes, finished_process);
-    finished_process->turnaround_time = t - finished_process->start_time;
+    finished_process->turnaround_time = t + 1 - finished_process->start_time;
     finished_process->in_time = t <= finished_process->deadline;
   }
 
@@ -164,11 +163,6 @@ void ready_processes(Queue* queue, int cpus)
 {
   // Si no hay ready processes no hacemos nada
   if (queue->ready_processes->head == NULL) return;
-
-  for(Process* current = queue->ready_processes -> head; current; current = current -> next)
-  {
-    current->waiting_time +=1;
-  }
 
   // Cantidad de procesos que podemos pasar a running
   int ready = cpus - queue->running_processes->len;
@@ -213,6 +207,11 @@ void ready_processes(Queue* queue, int cpus)
       check_for_interrupt = 0;
     } 
   }
+  
+  for(Process* current = queue->ready_processes -> head; current; current = current -> next)
+  {
+    current->waiting_time +=1;
+  }
 }
 
 void waiting_processes(Queue* queue) 
@@ -222,11 +221,7 @@ void waiting_processes(Queue* queue)
 
   for(Process* current = queue->waiting_processes -> head; current; current = current -> next)
   {
-    if (current->new_waiting)
-    {
-      current->new_waiting = 0;
-    }
-    else if (current->burst_time_left == 0)
+    if (current->burst_time_left == 0)
     {
       current -> current_io_burst += 1;
       ready_list[ready] = current ->pid;
@@ -254,7 +249,7 @@ void stats (Queue* queue, char* out_filename)
 
   for(Process* current = queue->finished_processes -> head; current; current = current -> next)
   {
-    fprintf(file, "%s  %i  %i  %i  %i  %i  %i\n", current->name, current->running_times, current->interrupted_times, current->turnaround_time, current->response_time, current->waiting_time, current->in_time);
+    fprintf(file, "%s,%i,%i,%i,%i,%i,%i\n", current->name, current->running_times, current->interrupted_times, current->turnaround_time, current->response_time, current->waiting_time, current->in_time);
   }
   fclose(file);
 }
@@ -262,14 +257,14 @@ void stats (Queue* queue, char* out_filename)
 void simulation(Queue* queue, int cpus)
 {
   int t = -1;
-  while ((t<7000) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  while ((t<700) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
   || queue->running_processes->len>0))
   {
     t+=1;
-    running_processes(queue, cpus, t);
     new_processes(queue, cpus, t);
     waiting_processes(queue);
     ready_processes(queue, cpus);
+    running_processes(queue, cpus, t);
     printf("---------------------------------\n");
     printf("Time: %i\n", t);
     printf("Not started:\n");
