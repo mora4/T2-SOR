@@ -30,7 +30,8 @@ void list_start_time_append(List* list, Process* process)
     list ->tail = process;
   }
   // Caso en que es mas prioritario que el head actual
-  else if (list -> head -> start_time > process -> start_time) 
+  else if (list -> head -> start_time > process -> start_time 
+  || (list -> head -> start_time == process -> start_time && list -> head -> deadline > process -> deadline )) 
   {
     process -> next = list -> head;
     list -> head = process;
@@ -42,7 +43,8 @@ void list_start_time_append(List* list, Process* process)
     Process* prev = list -> head;
     while(curr)
     {
-      if (curr -> start_time > process -> start_time)
+      if (curr -> start_time > process -> start_time
+      || (curr-> start_time == process -> start_time && curr-> deadline > process -> deadline ))
       {
         prev -> next = process;
         process -> next = curr;
@@ -71,7 +73,8 @@ void list_deadline_append(List* list, Process* process)
     list ->tail = process;
   }
   // Caso en que es mas prioritario que el head actual
-  else if (list -> head -> deadline > process -> deadline) 
+  else if ((list -> head -> deadline > process -> deadline)
+  || (list -> head -> deadline == process -> deadline && list -> head -> pid > process -> pid )) 
   {
     process -> next = list -> head;
     list -> head = process;
@@ -83,7 +86,8 @@ void list_deadline_append(List* list, Process* process)
     Process* prev = list -> head;
     while(curr)
     {
-      if (curr -> deadline > process -> deadline)
+      if ((curr -> deadline > process -> deadline)
+      || (curr-> deadline == process -> deadline && curr-> pid > process -> pid ))
       {
         prev -> next = process;
         process -> next = curr;

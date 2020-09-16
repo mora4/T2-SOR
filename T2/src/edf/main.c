@@ -245,8 +245,6 @@ void waiting_processes(Queue* queue)
 void stats (Queue* queue, char* out_filename)
 {
   FILE *file = fopen(out_filename, "w");
-  fprintf(file, "NAME    RUN.T  INT.T TURN.T RESP.T  WAIT.T  IN.T\n");
-
   for(Process* current = queue->finished_processes -> head; current; current = current -> next)
   {
     fprintf(file, "%s,%i,%i,%i,%i,%i,%i\n", current->name, current->running_times, current->interrupted_times, current->turnaround_time, current->response_time, current->waiting_time, current->in_time);
@@ -257,26 +255,14 @@ void stats (Queue* queue, char* out_filename)
 void simulation(Queue* queue, int cpus)
 {
   int t = -1;
-  while ((t<700) && (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
-  || queue->running_processes->len>0))
+  while (queue->not_started_processes->len>0 || queue->ready_processes->len>0 || queue->waiting_processes->len>0 
+  || queue->running_processes->len>0)
   {
     t+=1;
     new_processes(queue, cpus, t);
     waiting_processes(queue);
     ready_processes(queue, cpus);
     running_processes(queue, cpus, t);
-    printf("---------------------------------\n");
-    printf("Time: %i\n", t);
-    printf("Not started:\n");
-    list_print(queue->not_started_processes);
-    printf("Waiting:\n");
-    list_print(queue->waiting_processes);
-    printf("Ready:\n");
-    list_print(queue->ready_processes);
-    printf("Running:\n");
-    list_print(queue->running_processes);
-    printf("Finished:\n");
-    list_print(queue->finished_processes);
   }
   
 }
